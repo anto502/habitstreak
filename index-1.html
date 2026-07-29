@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Habit Streak</title>
+<meta name="description" content="Habit Streak — build daily habits and keep your streak alive.">
+<meta name="theme-color" content="#6750A4">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{
+  --primary:#6750A4;
+  --primary-dark:#4F3E8C;
+  --primary-light:#EADDFF;
+  --surface:#FFFBFE;
+  --surface-2:#F3EDF7;
+  --on-surface:#1C1B1F;
+  --on-surface-variant:#49454F;
+  --outline:#79747E;
+  --success:#2E7D32;
+  --fire:#F4511E;
+  --danger:#B3261E;
+  --radius-lg:24px;
+  --radius-md:16px;
+  --radius-sm:10px;
+  --elev-1:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --elev-2:0 3px 8px rgba(0,0,0,.16),0 2px 4px rgba(0,0,0,.08);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+[data-theme="dark"]{
+  --primary:#D0BCFF;
+  --primary-dark:#B69DF8;
+  --primary-light:#4F3E8C;
+  --surface:#141218;
+  --surface-2:#211F26;
+  --on-surface:#E6E0E9;
+  --on-surface-variant:#CAC4D0;
+  --outline:#938F99;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--surface);
+  color:var(--on-surface);
+  overscroll-behavior:none;
+  transition:background .25s,color .25s;
+  padding-top:var(--safe-top);
+  padding-bottom:var(--safe-bottom);
+}
+.hidden{display:none !important;}
+.app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px 8px;
+}
+.topbar h1{font-size:22px;font-weight:700;letter-spacing:-.3px;}
+.icon-btn{
+  width:40px;height:40px;border-radius:50%;border:none;background:var(--surface-2);
+  color:var(--on-surface);display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;transition:background .15s,transform .1s;
+}
+.icon-btn:active{transform:scale(.92);background:var(--primary-light);}
+
+/* ---------- Views ---------- */
+.view{flex:1;display:flex;flex-direction:column;padding:0 20px 100px;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ---------- Streak hero ---------- */
+.streak-card{
+  background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);
+  border-radius:var(--radius-lg);
+  padding:22px 24px;color:#fff;box-shadow:var(--elev-2);
+  display:flex;align-items:center;justify-content:space-between;margin:8px 0 20px;
+}
+.streak-num{font-size:40px;font-weight:800;line-height:1;}
+.streak-label{font-size:13px;opacity:.85;margin-top:4px;}
+.streak-fire{font-size:38px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));}
+.streak-sub{font-size:12px;opacity:.8;margin-top:6px;}
+
+/* ---------- Motivation banner ---------- */
+.motivate{
+  background:var(--surface-2);border-radius:var(--radius-md);padding:12px 16px;
+  font-size:13px;color:var(--on-surface-variant);margin-bottom:16px;
+  border-left:3px solid var(--primary);
+}
+
+/* ---------- Habit list ---------- */
+.section-title{font-size:13px;font-weight:700;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.6px;margin:6px 0 10px;}
+.habit-list{display:flex;flex-direction:column;gap:10px;}
+.habit-card{
+  background:var(--surface-2);border-radius:var(--radius-md);
+  padding:14px 16px;display:flex;align-items:center;gap:14px;
+  box-shadow:var(--elev-1);transition:transform .12s,opacity .2s;
+}
+.habit-card:active{transform:scale(.98);}
+.habit-emoji{
+  width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;background:var(--primary-light);flex-shrink:0;
+}
+.habit-info{flex:1;min-width:0;}
+.habit-name{font-size:15px;font-weight:600;}
+.habit-streak{font-size:12px;color:var(--on-surface-variant);margin-top:2px;}
+.check-btn{
+  width:34px;height:34px;border-radius:50%;border:2px solid var(--outline);
+  background:transparent;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .15s;flex-shrink:0;color:transparent;font-size:16px;
+}
+.check-btn.done{background:var(--success);border-color:var(--success);color:#fff;}
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--on-surface-variant);
+}
+.empty-state .big{font-size:44px;margin-bottom:12px;}
+
+/* ---------- FAB ---------- */
+.fab{
+  position:fixed;right:calc(50% - 240px + 20px);bottom:calc(90px + var(--safe-bottom));
+  width:56px;height:56px;border-radius:18px;border:none;
+  background:var(--primary);color:#fff;font-size:26px;box-shadow:var(--elev-2);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:40;
+  transition:transform .15s;
+}
+.fab:active{transform:scale(.92);}
+@media(max-width:520px){.fab{right:20px;}}
+
+/* ---------- Bottom nav ---------- */
+.bottomnav{
+  position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;
+  background:var(--surface);border-top:1px solid var(--surface-2);
+  display:flex;padding-bottom:var(--safe-bottom);z-index:30;
+  box-shadow:0 -2px 10px rgba(0,0,0,.06);
+}
+.navbtn{
+  flex:1;border:none;background:none;padding:10px 0 8px;display:flex;flex-direction:column;
+  align-items:center;gap:2px;color:var(--on-surface-variant);font-size:11px;cursor:pointer;
+}
+.navbtn.active{color:var(--primary);font-weight:700;}
+.navbtn .ic{font-size:20px;}
+
+/* ---------- Modal / sheet ---------- */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;
+  display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.overlay.show{opacity:1;pointer-events:auto;}
+.sheet{
+  background:var(--surface);width:100%;max-width:480px;margin:0 auto;
+  border-radius:24px 24px 0 0;padding:20px 20px calc(24px + var(--safe-bottom));
+  transform:translateY(100%);transition:transform .25s cubic-bezier(.2,.8,.2,1);
+  max-height:85vh;overflow-y:auto;
+}
+.overlay.show .sheet{transform:translateY(0);}
+.sheet h2{font-size:18px;margin-bottom:16px;}
+.sheet-handle{width:36px;height:4px;background:var(--outline);border-radius:2px;margin:0 auto 16px;opacity:.4;}
+
+.emoji-grid{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 16px;}
+.emoji-opt{
+  width:42px;height:42px;border-radius:12px;border:2px solid transparent;background:var(--surface-2);
+  font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.emoji-opt.sel{border-color:var(--primary);background:var(--primary-light);}
+
+input[type=text],input[type=number],input[type=time]{
+  width:100%;padding:13px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--surface-2);
+  background:var(--surface-2);color:var(--on-surface);font-size:15px;outline:none;
+}
+input:focus{border-color:var(--primary);}
+.btn{
+  width:100%;padding:14px;border-radius:var(--radius-sm);border:none;background:var(--primary);
+  color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:14px;
+}
+.btn:active{opacity:.85;}
+.btn.outline{background:transparent;color:var(--danger);border:1.5px solid var(--danger);}
+.btn.secondary{background:var(--surface-2);color:var(--on-surface);}
+
+/* ---------- Settings rows ---------- */
+.setting-row{
+  display:flex;align-items:center;justify-content:space-between;padding:14px 0;
+  border-bottom:1px solid var(--surface-2);
+}
+.setting-row .label{font-size:14px;font-weight:600;}
+.setting-row .sub{font-size:12px;color:var(--on-surface-variant);margin-top:2px;}
+.switch{position:relative;width:46px;height:26px;flex-shrink:0;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{
+  position:absolute;inset:0;background:var(--outline);border-radius:20px;cursor:pointer;transition:.2s;
+}
+.slider:before{
+  content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;
+  border-radius:50%;transition:.2s;
+}
+input:checked + .slider{background:var(--primary);}
+input:checked + .slider:before{transform:translateX(20px);}
+.seg{display:flex;background:var(--surface-2);border-radius:12px;padding:3px;gap:3px;}
+.seg button{
+  flex:1;border:none;background:none;padding:9px 0;border-radius:9px;font-size:13px;font-weight:600;
+  color:var(--on-surface-variant);cursor:pointer;
+}
+.seg button.active{background:var(--primary);color:#fff;}
+
+/* ---------- Badges ---------- */
+.badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.badge{
+  background:var(--surface-2);border-radius:var(--radius-md);padding:14px 8px;text-align:center;
+  opacity:.35;filter:grayscale(1);
+}
+.badge.unlocked{opacity:1;filter:none;box-shadow:var(--elev-1);}
+.badge .bi{font-size:26px;}
+.badge .bn{font-size:10px;font-weight:700;margin-top:6px;}
+
+/* ---------- Ads ---------- */
+.ad-banner{
+  background:var(--surface-2);border:1px dashed var(--outline);border-radius:var(--radius-sm);
+  padding:10px;text-align:center;font-size:11px;color:var(--on-surface-variant);margin-bottom:14px;
+}
+.ad-banner-fixed{
+  position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;z-index:20;
+  background:var(--surface-2);border-top:1px solid var(--outline);
+  display:flex;align-items:center;justify-content:center;height:50px;font-size:11px;
+  color:var(--on-surface-variant);
+}
+.reward-card{
+  background:linear-gradient(135deg,#F4511E,#FF8A50);border-radius:var(--radius-md);
+  padding:16px;color:#fff;margin-bottom:16px;display:flex;align-items:center;gap:12px;cursor:pointer;
+}
+.reward-card .ri{font-size:26px;}
+.reward-card .rt{font-size:13px;font-weight:700;}
+.reward-card .rs{font-size:11px;opacity:.85;}
+
+/* ---------- Onboarding ---------- */
+#onboarding{
+  position:fixed;inset:0;background:var(--primary);z-index:100;color:#fff;
+  display:flex;flex-direction:column;
+}
+.ob-slides{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+.ob-slide{
+  min-width:100%;scroll-snap-align:start;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:40px;
+}
+.ob-slide .oi{font-size:72px;margin-bottom:24px;}
+.ob-slide h2{font-size:24px;margin-bottom:10px;}
+.ob-slide p{font-size:14px;opacity:.85;line-height:1.5;max-width:280px;}
+.ob-dots{display:flex;justify-content:center;gap:6px;padding:10px;}
+.ob-dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);}
+.ob-dots span.active{background:#fff;width:20px;border-radius:4px;}
+.ob-footer{padding:20px 24px calc(24px + var(--safe-bottom));}
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);
+  background:var(--on-surface);color:var(--surface);padding:12px 20px;border-radius:30px;
+  font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:60;
+  box-shadow:var(--elev-2);white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- ===================== ONBOARDING ===================== -->
+<div id="onboarding">
+  <div class="ob-slides" id="obSlides">
+    <div class="ob-slide"><div class="oi">🔥</div><h2>Build streaks that stick</h2><p>Check off your habits once a day and watch your streak grow. Small wins, every day.</p></div>
+    <div class="ob-slide"><div class="oi">🎯</div><h2>Stay consistent</h2><p>A gentle daily reminder keeps you on track — no pressure, just a nudge at the right time.</p></div>
+    <div class="ob-slide"><div class="oi">🏆</div><h2>Unlock achievements</h2><p>Earn badges as your streak grows and track your progress at a glance.</p></div>
+  </div>
+  <div class="ob-dots" id="obDots"><span class="active"></span><span></span><span></span></div>
+  <div class="ob-footer">
+    <button class="btn" style="background:#fff;color:var(--primary);" id="obNext">Get Started</button>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- ===================== TOP BAR ===================== -->
+  <div class="topbar">
+    <h1 id="pageTitle">Habit Streak</h1>
+    <button class="icon-btn" id="themeToggleBtn" title="Toggle theme">🌙</button>
+  </div>
+
+  <!-- ===================== HOME VIEW ===================== -->
+  <div class="view" id="view-home">
+    <div class="streak-card">
+      <div>
+        <div class="streak-num" id="globalStreak">0</div>
+        <div class="streak-label">day streak</div>
+        <div class="streak-sub" id="todayProgress">0 of 0 done today</div>
+      </div>
+      <div class="streak-fire">🔥</div>
+    </div>
+
+    <div class="motivate" id="motivateText">Every habit you check today builds tomorrow's streak.</div>
+
+    <div class="ad-banner" id="inlineAd">Banner Ad Placeholder — 320x50</div>
+
+    <div class="section-title">Today</div>
+    <div class="habit-list" id="habitList"></div>
+  </div>
+
+  <!-- ===================== BADGES VIEW ===================== -->
+  <div class="view hidden" id="view-badges">
+    <div class="reward-card" id="rewardAdBtn">
+      <div class="ri">🎁</div>
+      <div>
+        <div class="rt">Watch a short ad</div>
+        <div class="rs">Unlock a bonus badge theme</div>
+      </div>
+    </div>
+    <div class="section-title">Achievements</div>
+    <div class="badge-grid" id="badgeGrid"></div>
+  </div>
+
+  <!-- ===================== SETTINGS VIEW ===================== -->
+  <div class="view hidden" id="view-settings">
+    <div class="section-title">Appearance</div>
+    <div class="setting-row">
+      <div><div class="label">Dark mode</div><div class="sub">Switch to a darker color scheme</div></div>
+      <label class="switch"><input type="checkbox" id="darkModeSwitch"><span class="slider"></span></label>
+    </div>
+
+    <div class="section-title" style="margin-top:20px;">Notifications</div>
+    <div class="setting-row">
+      <div><div class="label">Daily reminder</div><div class="sub">Get nudged if habits aren't done</div></div>
+      <label class="switch"><input type="checkbox" id="notifSwitch"><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <div><div class="label">Reminder time</div></div>
+      <input type="time" id="notifTime" value="20:00" style="width:120px;">
+    </div>
+
+    <div class="section-title" style="margin-top:20px;">Data</div>
+    <div class="setting-row">
+      <div><div class="label">Reset all data</div><div class="sub">Deletes habits, streaks and settings</div></div>
+      <button class="icon-btn" id="resetBtn">🗑️</button>
+    </div>
+
+    <div class="section-title" style="margin-top:20px;">About</div>
+    <div class="setting-row" style="cursor:pointer;" id="openPrivacy">
+      <div><div class="label">Privacy Policy</div></div>
+      <div>›</div>
+    </div>
+    <div class="setting-row">
+      <div><div class="label">Version</div></div>
+      <div class="sub">1.0.0</div>
+    </div>
+  </div>
+
+  <!-- ===================== PRIVACY VIEW ===================== -->
+  <div class="view hidden" id="view-privacy">
+    <div class="section-title">Privacy Policy</div>
+    <div id="privacyText" style="font-size:13px;line-height:1.7;color:var(--on-surface-variant);"></div>
+  </div>
+
+  <button class="fab" id="addHabitFab">+</button>
+
+  <div class="bottomnav">
+    <button class="navbtn active" data-view="home"><span class="ic">🏠</span>Home</button>
+    <button class="navbtn" data-view="badges"><span class="ic">🏆</span>Badges</button>
+    <button class="navbtn" data-view="settings"><span class="ic">⚙️</span>Settings</button>
+  </div>
+
+  <div class="ad-banner-fixed hidden" id="fixedBanner">Banner Ad — 320x50</div>
+</div>
+
+<!-- ===================== ADD HABIT SHEET ===================== -->
+<div class="overlay" id="addHabitOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>New Habit</h2>
+    <input type="text" id="habitNameInput" placeholder="e.g. Drink water, Read 10 pages">
+    <div class="emoji-grid" id="emojiGrid"></div>
+    <button class="btn" id="saveHabitBtn">Add Habit</button>
+    <button class="btn secondary" id="cancelHabitBtn">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
